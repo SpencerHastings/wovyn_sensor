@@ -1,5 +1,12 @@
 ruleset wovyn_base {
 
+    meta {
+        use module twilio_lesson_keys
+        use module twilio_m alias twilio
+            with account_sid = keys:twilio{"account_sid"}
+                auth_token =  keys:twilio{"auth_token"}
+    }
+
     global {
         temperature_threshold = 71.0
     }
@@ -30,5 +37,19 @@ ruleset wovyn_base {
                 attributes {"temperature": temperature, "threshold": temperature_threshold}
                 if is_violation
         }
+    }
+
+    rule threshold_notification {
+        select when wovyn:threshold_violation
+        pre {
+            message = "The current temperature of " + 
+                event:attr("temperature") +
+                " has violated the threshold of " +
+                event:attr("threshold") + 
+                "."
+        }
+        twilio:send_sms("+18013100486",
+                      "+12029911769",
+                      message)
     }
 }
